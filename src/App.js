@@ -99,15 +99,15 @@ function applyFontSize(size) {
 }
 
 function parseRelatedQuestions(text) {
-  const match = text.match(/## أسئلة مقترحة:([\s\S]*?)$/)
+  const match = text.match(/##?\s*أسئلة مقترحة\s*:?([\s\S]*?)$/)
   if (!match) return { cleanText: text, questions: [] }
   const questionsBlock = match[1]
   const questions = questionsBlock
     .split('\n')
-    .map(q => q.replace(/^[-*\d.]\s*/, '').trim())
+    .map(q => q.replace(/^[-*\d.\[\]()]\s*/, '').replace(/\[.*?\]/g, '').trim())
     .filter(q => q.length > 5)
     .slice(0, 3)
-  const cleanText = text.replace(/## أسئلة مقترحة:([\s\S]*?)$/, '').trim()
+  const cleanText = text.replace(/##?\s*أسئلة مقترحة\s*:?([\s\S]*?)$/, '').trim()
   return { cleanText, questions }
 }
 
