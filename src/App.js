@@ -456,7 +456,7 @@ export default function App() {
     setLoading(true)
 
     try {
-      const res = await axios.post('http://localhost:3001/api/chat', {
+      const res = await axios.post('https://hqbot-backend.onrender.com/api/chat', {
         question,
         history: currentMessages.slice(-6).map(m => ({ role: m.role, text: m.text }))
       })
