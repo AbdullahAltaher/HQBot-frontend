@@ -98,21 +98,6 @@ function applyFontSize(size) {
   document.documentElement.style.setProperty('--chat-font-size', FONT_SIZES[size])
 }
 
-function parseRelatedQuestions(text) {
-  const cleanedText = text.replace(/\n*هل تو[دّ].*?؟\s*$/g, '').trim()
-
-  const match = cleanedText.match(/##?\s*أسئلة مقترحة\s*:?([\s\S]*?)$/)
-  if (!match) return { cleanText: cleanedText, questions: [] }
-  const questionsBlock = match[1]
-  const questions = questionsBlock
-    .split('\n')
-    .map(q => q.replace(/^[-*\d.\[\]()]\s*/, '').replace(/\[.*?\]/g, '').trim())
-    .filter(q => q.length > 5)
-    .slice(0, 3)
-  const cleanText = cleanedText.replace(/##?\s*أسئلة مقترحة\s*:?([\s\S]*?)$/, '').trim()
-  return { cleanText, questions }
-}
-
 function TTSButton({ text, lang, ui }) {
   const [speaking, setSpeaking] = useState(false)
 
@@ -177,7 +162,7 @@ function CopyButton({ text, ui }) {
 }
 
 function AssistantMessage({ msg, settings, ui, onSendMessage }) {
-  const { cleanText, questions } = parseRelatedQuestions(msg.text)
+  const questions = msg.suggestedQuestions || []
   return (
     <div className="message assistant">
       <div className="assistant-row">
@@ -185,7 +170,7 @@ function AssistantMessage({ msg, settings, ui, onSendMessage }) {
           <img src={logo} alt="logo" style={{ width: 16, height: 16 }} />
         </div>
         <div className="assistant-bubble" dir="auto">
-          <ReactMarkdown>{cleanText}</ReactMarkdown>
+          <ReactMarkdown>{msg.text}</ReactMarkdown>
           {questions.length > 0 && (
             <div className="related-questions">
               <p className="related-title">💡 {ui.related}</p>
@@ -211,13 +196,13 @@ function AssistantMessage({ msg, settings, ui, onSendMessage }) {
       )}
       <div className="message-actions">
         <CopyButton text={msg.text} ui={ui} />
-        {settings.tts && <TTSButton text={cleanText} lang={settings.language} ui={ui} />}
+        {settings.tts && <TTSButton text={msg.text} lang={settings.language} ui={ui} />}
       </div>
     </div>
   )
 }
 
-function TypingMessage({ fullText, sources, onDone, settings, ui, onSendMessage }) {
+function TypingMessage({ fullText, sources, suggestedQuestions, onDone, settings, ui, onSendMessage }) {
   const [displayed, setDisplayed] = useState('')
   const [done, setDone] = useState(false)
   const index = useRef(0)
@@ -241,7 +226,7 @@ function TypingMessage({ fullText, sources, onDone, settings, ui, onSendMessage 
     return () => clearInterval(interval)
   }, [fullText])
 
-  const { cleanText, questions } = parseRelatedQuestions(displayed)
+  const questions = done ? (suggestedQuestions || []) : []
 
   return (
     <div className="message assistant">
@@ -250,7 +235,7 @@ function TypingMessage({ fullText, sources, onDone, settings, ui, onSendMessage 
           <img src={logo} alt="logo" style={{ width: 16, height: 16 }} />
         </div>
         <div className="assistant-bubble" dir="auto">
-          <ReactMarkdown>{cleanText}</ReactMarkdown>
+          <ReactMarkdown>{displayed}</ReactMarkdown>
           {!done && <span className="cursor" />}
           {done && questions.length > 0 && (
             <div className="related-questions">
@@ -278,7 +263,7 @@ function TypingMessage({ fullText, sources, onDone, settings, ui, onSendMessage 
       {done && (
         <div className="message-actions">
           <CopyButton text={fullText} ui={ui} />
-          {settings.tts && <TTSButton text={cleanText} lang={settings.language} ui={ui} />}
+          {settings.tts && <TTSButton text={fullText} lang={settings.language} ui={ui} />}
         </div>
       )}
     </div>
@@ -466,6 +451,7 @@ export default function App() {
         role: 'assistant',
         text: res.data.answer,
         sources: res.data.sources,
+        suggestedQuestions: res.data.suggestedQuestions || [],
         typing: true
       }]
       updateChats(updatedWithUser.map(c =>
@@ -588,6 +574,7 @@ export default function App() {
                   key={i}
                   fullText={msg.text}
                   sources={msg.sources}
+                  suggestedQuestions={msg.suggestedQuestions || []}
                   settings={settings}
                   ui={ui}
                   onSendMessage={sendMessage}
