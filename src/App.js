@@ -21,7 +21,7 @@ const UI = {
     noChats: 'لا توجد محادثات بعد',
     assistant: 'مساعد التاريخ والشعر العربي',
     welcome: 'كيف يمكنني مساعدتك؟',
-    welcomeDesc: 'اسألني عن تاريخ القواسم والشارقة والشعر العربي الكلاسيكي',
+    welcomeDesc: 'اسألني عن تاريخ القواسم والخليج والشعر العربي الكلاسيكي',
     placeholder: 'اسأل عن التاريخ والشعر العربي...',
     hint: 'Enter للإرسال · Shift+Enter لسطر جديد',
     copy: 'نسخ',
@@ -57,8 +57,8 @@ const UI = {
 }
 
 const SUGGESTIONS = {
-  ar: ['من هم القواسم؟', 'ما هي معاهدة 1820؟', 'من هو سلطان بن صقر؟', 'ما قصة اجتماع الطماشة؟'],
-  en: ['Who are the Qawasim?', 'What is the 1820 treaty?', 'Who is Sultan bin Saqr?', 'What is the Tamashe meeting?']
+  ar: ['من هم القواسم؟', 'ما هي معاهدة 1820؟', 'ما تاريخ نجد وآل سعود؟', 'من هو سلطان بن صقر؟'],
+  en: ['Who are the Qawasim?', 'What is the 1820 treaty?', 'What is the history of Najd and Al Saud?', 'Who is Sultan bin Saqr?']
 }
 
 let chatIdCounter = 1
