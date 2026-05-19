@@ -4,6 +4,7 @@ import ReactMarkdown from 'react-markdown'
 import logo from './qawasim_chatbot_logo.svg'
 import Login from './Login'
 import Settings from './Settings'
+import Quiz from './Quiz'
 import './App.css'
 
 const DEFAULT_SETTINGS = {
@@ -33,7 +34,8 @@ const UI = {
     badge: 'RAG · CLAUDE',
     stop: 'إيقاف',
     speak: 'استمع',
-    related: 'أسئلة مقترحة'
+    related: 'أسئلة مقترحة',
+    quiz: 'اختبار'
   },
   en: {
     newChat: 'New Chat',
@@ -52,7 +54,8 @@ const UI = {
     badge: 'RAG · CLAUDE',
     stop: 'Stop',
     speak: 'Listen',
-    related: 'Suggested questions'
+    related: 'Suggested questions',
+    quiz: 'Quiz'
   }
 }
 
@@ -327,6 +330,7 @@ export default function App() {
   const [loading, setLoading] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
+  const [showQuiz, setShowQuiz] = useState(false)
   const [settings, setSettings] = useState(loadSettings)
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
   const bottomRef = useRef(null)
@@ -496,6 +500,8 @@ export default function App() {
         />
       )}
 
+      {showQuiz && <Quiz onClose={() => setShowQuiz(false)} />}
+
       {sidebarOpen && isMobile && (
         <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />
       )}
@@ -533,7 +539,10 @@ export default function App() {
             <img src={logo} alt="logo" style={{ width: 24, height: 24, borderRadius: '50%', border: '1px solid var(--border-dim)' }} />
             <span>{user}</span>
           </div>
-          <button className="settings-btn" onClick={() => setShowSettings(true)}>⚙️</button>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button className="settings-btn" onClick={() => setShowQuiz(true)} title={ui.quiz} style={{ fontSize: 14 }}>🎯</button>
+            <button className="settings-btn" onClick={() => setShowSettings(true)}>⚙️</button>
+          </div>
         </div>
       </div>
 
@@ -542,6 +551,7 @@ export default function App() {
           <button className="toggle-btn open-btn" onClick={() => setSidebarOpen(true)}>☰</button>
           <img src={logo} alt="logo" className="header-logo" />
           <h1>{ui.assistant}</h1>
+          <button className="settings-btn-header" onClick={() => setShowQuiz(true)} title={ui.quiz} style={{ fontSize: 14 }}>🎯</button>
           <button className="settings-btn-header" onClick={() => setShowSettings(true)}>⚙️</button>
           <span className="header-badge">{ui.badge}</span>
         </header>
@@ -557,6 +567,24 @@ export default function App() {
                   <button key={i} className="suggestion" onClick={() => sendMessage(s)}>{s}</button>
                 ))}
               </div>
+              <button
+                onClick={() => setShowQuiz(true)}
+                style={{
+                  marginTop: 8,
+                  padding: '10px 24px',
+                  background: 'rgba(56,189,248,0.08)',
+                  border: '1px solid rgba(56,189,248,0.2)',
+                  borderRadius: 12,
+                  color: '#38bdf8',
+                  fontSize: 13,
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                  letterSpacing: '0.04em',
+                  transition: 'all 0.2s'
+                }}
+              >
+                🎯 {settings.language === 'ar' ? 'اختبر معلوماتك' : 'Take a Quiz'}
+              </button>
             </div>
           )}
 
