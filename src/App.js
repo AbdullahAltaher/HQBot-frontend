@@ -21,44 +21,44 @@ const UI = {
     noChats: 'لا توجد محادثات بعد',
     assistant: 'مساعد التاريخ والشعر العربي',
     welcome: 'كيف يمكنني مساعدتك؟',
-    welcomeDesc: 'اسألني عن تاريخ القواسم والخليج والشعر العربي الكلاسيكي',
+    welcomeDesc: 'اسألني عن تاريخ القواسم والخليج ونجد وآل سعود',
     placeholder: 'اسأل عن التاريخ والشعر العربي...',
     hint: 'Enter للإرسال · Shift+Enter لسطر جديد',
     copy: 'نسخ',
-    copied: '✓ تم النسخ',
+    copied: '✓ تم',
     source: 'مصدر',
     error: 'حدث خطأ في الاتصال. يرجى المحاولة مرة أخرى.',
     hello: 'أهلاً',
     canHelp: '، كيف يمكنني مساعدتك؟',
-    badge: 'RAG · Claude',
+    badge: 'RAG · CLAUDE',
     stop: 'إيقاف',
     speak: 'استمع',
-    related: 'أسئلة مقترحة:'
+    related: 'أسئلة مقترحة'
   },
   en: {
     newChat: 'New Chat',
     noChats: 'No chats yet',
     assistant: 'Qawasim History Assistant',
     welcome: 'How can I help you?',
-    welcomeDesc: 'Ask me about Qawasim history, Sharjah, and classical Arabic poetry',
+    welcomeDesc: 'Ask me about Qawasim history, Sharjah, Najd and Al Saud',
     placeholder: 'Ask about history and Arabic poetry...',
     hint: 'Enter to send · Shift+Enter for new line',
     copy: 'Copy',
-    copied: '✓ Copied',
+    copied: '✓ Done',
     source: 'Source',
     error: 'Connection error. Please try again.',
     hello: 'Hello',
     canHelp: ', how can I help you?',
-    badge: 'RAG · Claude',
+    badge: 'RAG · CLAUDE',
     stop: 'Stop',
     speak: 'Listen',
-    related: 'Suggested questions:'
+    related: 'Suggested questions'
   }
 }
 
 const SUGGESTIONS = {
   ar: ['من هم القواسم؟', 'ما هي معاهدة 1820؟', 'ما تاريخ نجد وآل سعود؟', 'من هو سلطان بن صقر؟'],
-  en: ['Who are the Qawasim?', 'What is the 1820 treaty?', 'What is the history of Najd and Al Saud?', 'Who is Sultan bin Saqr?']
+  en: ['Who are the Qawasim?', 'What is the 1820 treaty?', 'History of Najd and Al Saud?', 'Who is Sultan bin Saqr?']
 }
 
 let chatIdCounter = 1
@@ -111,13 +111,7 @@ function TTSButton({ text, lang, ui }) {
       setSpeaking(false)
       return
     }
-
-    const cleanText = text
-      .replace(/[#*`_]/g, '')
-      .replace(/\[.*?\]/g, '')
-      .replace(/\s+/g, ' ')
-      .trim()
-
+    const cleanText = text.replace(/[#*`_]/g, '').replace(/\[.*?\]/g, '').replace(/\s+/g, ' ').trim()
     setSpeaking(true)
     try {
       const res = await fetch('https://hqbot-backend.onrender.com/api/tts', {
@@ -164,7 +158,7 @@ function AssistantMessage({ msg, settings, ui, onSendMessage }) {
     <div className="message assistant">
       <div className="assistant-row">
         <div className="ai-avatar">
-          <img src={logo} alt="logo" style={{ width: 16, height: 16 }} />
+          <img src={logo} alt="logo" style={{ width: 14, height: 14 }} />
         </div>
         <div className="assistant-bubble" dir="auto">
           <ReactMarkdown>{msg.text}</ReactMarkdown>
@@ -225,7 +219,7 @@ function TypingMessage({ fullText, sources, suggestedQuestions, onDone, settings
     <div className="message assistant">
       <div className="assistant-row">
         <div className="ai-avatar">
-          <img src={logo} alt="logo" style={{ width: 16, height: 16 }} />
+          <img src={logo} alt="logo" style={{ width: 14, height: 14 }} />
         </div>
         <div className="assistant-bubble" dir="auto">
           <ReactMarkdown>{displayed}</ReactMarkdown>
@@ -264,12 +258,12 @@ function ThinkingDots() {
     <div className="message assistant">
       <div className="assistant-row">
         <div className="ai-avatar">
-          <img src={logo} alt="logo" style={{ width: 16, height: 16 }} />
+          <img src={logo} alt="logo" style={{ width: 14, height: 14 }} />
         </div>
         <div className="assistant-bubble">
           <span className="cursor" style={{ marginLeft: 2 }} />
-          <span className="cursor" style={{ animationDelay: '0.3s', marginLeft: 4 }} />
-          <span className="cursor" style={{ animationDelay: '0.6s', marginLeft: 4 }} />
+          <span className="cursor" style={{ animationDelay: '0.3s', marginLeft: 5 }} />
+          <span className="cursor" style={{ animationDelay: '0.6s', marginLeft: 5 }} />
         </div>
       </div>
     </div>
@@ -298,7 +292,7 @@ function ChatItem({ chat, active, onClick, onDelete, onRename }) {
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}
     >
-      <span className="chat-icon">💬</span>
+      <span className="chat-icon">◈</span>
       {editing ? (
         <input
           ref={inputRef}
@@ -318,7 +312,7 @@ function ChatItem({ chat, active, onClick, onDelete, onRename }) {
       {(hovering || active) && !editing && (
         <div className="chat-actions" onClick={e => e.stopPropagation()}>
           <button className="chat-action-btn" onClick={() => { setEditing(true); setEditVal(chat.title) }}>✏️</button>
-          <button className="chat-action-btn" onClick={onDelete}>🗑️</button>
+          <button className="chat-action-btn" onClick={onDelete}>🗑</button>
         </div>
       )}
     </div>
@@ -381,7 +375,7 @@ export default function App() {
   }
 
   function handleLogout() {
-    window.speechSynthesis.cancel()
+    window.speechSynthesis?.cancel()
     setUser(null)
     setChats([])
     setActiveChatId(null)
@@ -515,7 +509,7 @@ export default function App() {
         </div>
         <div className="chat-list">
           {chats.length === 0 ? (
-            <div style={{ padding: '20px', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: 13 }}>
+            <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-tertiary)', fontSize: 12, letterSpacing: '0.04em' }}>
               {ui.noChats}
             </div>
           ) : (
@@ -536,7 +530,7 @@ export default function App() {
         </div>
         <div className="sidebar-footer">
           <div className="sidebar-info">
-            <img src={logo} alt="logo" style={{ width: 28, height: 28 }} />
+            <img src={logo} alt="logo" style={{ width: 24, height: 24, borderRadius: '50%', border: '1px solid var(--border-dim)' }} />
             <span>{user}</span>
           </div>
           <button className="settings-btn" onClick={() => setShowSettings(true)}>⚙️</button>
