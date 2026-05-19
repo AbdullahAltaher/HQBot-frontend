@@ -9,7 +9,7 @@ export default function Login({ onEnter }) {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const CORRECT_PASSWORD = 'qawasim2024'
+  const CORRECT_PASSWORD = 'q2024'
 
   function handleSplash() {
     setStep('name')
