@@ -5,6 +5,7 @@ import logo from './qawasim_chatbot_logo.svg'
 import Login from './Login'
 import Settings from './Settings'
 import Quiz from './Quiz'
+import Story from './Story'
 import './App.css'
 
 const DEFAULT_SETTINGS = {
@@ -35,7 +36,8 @@ const UI = {
     stop: 'إيقاف',
     speak: 'استمع',
     related: 'أسئلة مقترحة',
-    quiz: 'اختبار'
+    quiz: 'اختبار',
+    story: 'قصة'
   },
   en: {
     newChat: 'New Chat',
@@ -55,7 +57,8 @@ const UI = {
     stop: 'Stop',
     speak: 'Listen',
     related: 'Suggested questions',
-    quiz: 'Quiz'
+    quiz: 'Quiz',
+    story: 'Story'
   }
 }
 
@@ -331,6 +334,7 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [showQuiz, setShowQuiz] = useState(false)
+  const [showStory, setShowStory] = useState(false)
   const [settings, setSettings] = useState(loadSettings)
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
   const bottomRef = useRef(null)
@@ -501,6 +505,7 @@ export default function App() {
       )}
 
       {showQuiz && <Quiz onClose={() => setShowQuiz(false)} />}
+      {showStory && <Story onClose={() => setShowStory(false)} />}
 
       {sidebarOpen && isMobile && (
         <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />
@@ -540,6 +545,7 @@ export default function App() {
             <span>{user}</span>
           </div>
           <div style={{ display: 'flex', gap: 6 }}>
+            <button className="settings-btn" onClick={() => setShowStory(true)} title={ui.story} style={{ fontSize: 14 }}>📖</button>
             <button className="settings-btn" onClick={() => setShowQuiz(true)} title={ui.quiz} style={{ fontSize: 14 }}>🎯</button>
             <button className="settings-btn" onClick={() => setShowSettings(true)}>⚙️</button>
           </div>
@@ -551,6 +557,7 @@ export default function App() {
           <button className="toggle-btn open-btn" onClick={() => setSidebarOpen(true)}>☰</button>
           <img src={logo} alt="logo" className="header-logo" />
           <h1>{ui.assistant}</h1>
+          <button className="settings-btn-header" onClick={() => setShowStory(true)} title={ui.story} style={{ fontSize: 14 }}>📖</button>
           <button className="settings-btn-header" onClick={() => setShowQuiz(true)} title={ui.quiz} style={{ fontSize: 14 }}>🎯</button>
           <button className="settings-btn-header" onClick={() => setShowSettings(true)}>⚙️</button>
           <span className="header-badge">{ui.badge}</span>
@@ -567,24 +574,40 @@ export default function App() {
                   <button key={i} className="suggestion" onClick={() => sendMessage(s)}>{s}</button>
                 ))}
               </div>
-              <button
-                onClick={() => setShowQuiz(true)}
-                style={{
-                  marginTop: 8,
-                  padding: '10px 24px',
-                  background: 'rgba(56,189,248,0.08)',
-                  border: '1px solid rgba(56,189,248,0.2)',
-                  borderRadius: 12,
-                  color: '#38bdf8',
-                  fontSize: 13,
-                  cursor: 'pointer',
-                  fontFamily: 'inherit',
-                  letterSpacing: '0.04em',
-                  transition: 'all 0.2s'
-                }}
-              >
-                🎯 {settings.language === 'ar' ? 'اختبر معلوماتك' : 'Take a Quiz'}
-              </button>
+              <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
+                <button
+                  onClick={() => setShowStory(true)}
+                  style={{
+                    padding: '10px 20px',
+                    background: 'rgba(255,200,100,0.07)',
+                    border: '1px solid rgba(255,200,100,0.18)',
+                    borderRadius: 12,
+                    color: 'rgba(255,220,130,0.8)',
+                    fontSize: 13,
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  📖 {settings.language === 'ar' ? 'وضع القصة' : 'Story Mode'}
+                </button>
+                <button
+                  onClick={() => setShowQuiz(true)}
+                  style={{
+                    padding: '10px 20px',
+                    background: 'rgba(56,189,248,0.07)',
+                    border: '1px solid rgba(56,189,248,0.18)',
+                    borderRadius: 12,
+                    color: '#38bdf8',
+                    fontSize: 13,
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  🎯 {settings.language === 'ar' ? 'اختبر معلوماتك' : 'Take a Quiz'}
+                </button>
+              </div>
             </div>
           )}
 
