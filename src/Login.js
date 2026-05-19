@@ -3,7 +3,7 @@ import logo from './qawasim_chatbot_logo.svg'
 import './Login.css'
 
 export default function Login({ onEnter }) {
-  const [step, setStep] = useState('splash') // 'splash' | 'name' | 'password'
+  const [step, setStep] = useState('splash')
   const [name, setName] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -18,7 +18,11 @@ export default function Login({ onEnter }) {
   function handleName(e) {
     e.preventDefault()
     if (!name.trim()) return
-    setStep('password')
+    if (name.trim().toLowerCase() === 'soso') {
+      setStep('soso')
+    } else {
+      setStep('password')
+    }
   }
 
   function handlePassword(e) {
@@ -95,6 +99,25 @@ export default function Login({ onEnter }) {
               التالي ←
             </button>
           </form>
+        </div>
+      )}
+
+      {/* SOSO SPECIAL PAGE */}
+      {step === 'soso' && (
+        <div className="login-card animate-in" style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: 60, marginBottom: 16 }}>🌸💕</div>
+          <h2 className="login-card-title" style={{ fontSize: 28, lineHeight: 1.6 }}>
+            مرحبااااا السااااع غناااتيييي
+          </h2>
+          <p style={{ color: 'rgba(255,255,255,0.7)', margin: '16px 0 32px', fontSize: 16 }}>
+            يسعدنا وجودك هنا ✨
+          </p>
+          <button
+            className="login-btn"
+            onClick={() => setStep('password')}
+          >
+            ادخلي ←
+          </button>
         </div>
       )}
 
