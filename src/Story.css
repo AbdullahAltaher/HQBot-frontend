@@ -355,6 +355,19 @@
   white-space: nowrap;
 }
 
+.story-status {
+  font-size: 11px;
+  color: var(--mood-color, rgba(255,200,100,0.6));
+  font-family: 'IBM Plex Mono', monospace;
+  letter-spacing: 0.04em;
+  animation: statusPulse 1.5s ease infinite;
+}
+
+@keyframes statusPulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
 /* Text */
 .story-body {
   position: relative;
