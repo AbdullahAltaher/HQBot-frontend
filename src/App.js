@@ -172,11 +172,7 @@ function AssistantMessage({ msg, settings, ui, onSendMessage }) {
             <div className="related-questions">
               <p className="related-title">💡 {ui.related}</p>
               {questions.map((q, qi) => (
-                <button
-                  key={qi}
-                  className="related-btn"
-                  onClick={() => onSendMessage(q)}
-                >{q}</button>
+                <button key={qi} className="related-btn" onClick={() => onSendMessage(q)}>{q}</button>
               ))}
             </div>
           )}
@@ -238,11 +234,7 @@ function TypingMessage({ fullText, sources, suggestedQuestions, onDone, settings
             <div className="related-questions">
               <p className="related-title">💡 {ui.related}</p>
               {questions.map((q, qi) => (
-                <button
-                  key={qi}
-                  className="related-btn"
-                  onClick={() => onSendMessage(q)}
-                >{q}</button>
+                <button key={qi} className="related-btn" onClick={() => onSendMessage(q)}>{q}</button>
               ))}
             </div>
           )}
@@ -339,9 +331,10 @@ export default function App() {
   const [activeChatId, setActiveChatId] = useState(null)
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [settings, setSettings] = useState(loadSettings)
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
   const bottomRef = useRef(null)
   const textareaRef = useRef(null)
 
@@ -349,6 +342,16 @@ export default function App() {
   const suggestions = SUGGESTIONS[settings.language]
   const activeChat = chats.find(c => c.id === activeChatId)
   const messages = activeChat?.messages || []
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  useEffect(() => {
+    setSidebarOpen(!isMobile)
+  }, [isMobile])
 
   useEffect(() => {
     applyTheme(settings.theme)
@@ -395,6 +398,7 @@ export default function App() {
     })
     setActiveChatId(id)
     setInput('')
+    if (isMobile) setSidebarOpen(false)
     return id
   }
 
@@ -424,6 +428,7 @@ export default function App() {
     if (!currentChatId) currentChatId = createNewChat()
 
     setInput('')
+    if (isMobile) setSidebarOpen(false)
     if (textareaRef.current) textareaRef.current.style.height = 'auto'
 
     const currentMessages = chats.find(c => c.id === currentChatId)?.messages || []
@@ -465,7 +470,7 @@ export default function App() {
       ))
     }
     setLoading(false)
-  }, [input, loading, chats, activeChatId, user, ui])
+  }, [input, loading, chats, activeChatId, user, ui, isMobile])
 
   function handleKey(e) {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -497,6 +502,10 @@ export default function App() {
         />
       )}
 
+      {sidebarOpen && isMobile && (
+        <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />
+      )}
+
       <div className={`sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
         <div className="sidebar-header">
           <button className="new-chat-btn" onClick={() => createNewChat()}>
@@ -515,7 +524,10 @@ export default function App() {
                 key={chat.id}
                 chat={chat}
                 active={chat.id === activeChatId}
-                onClick={() => setActiveChatId(chat.id)}
+                onClick={() => {
+                  setActiveChatId(chat.id)
+                  if (isMobile) setSidebarOpen(false)
+                }}
                 onDelete={() => deleteChat(chat.id)}
                 onRename={(newTitle) => renameChat(chat.id, newTitle)}
               />
@@ -533,9 +545,7 @@ export default function App() {
 
       <div className="main">
         <header className="header">
-          {!sidebarOpen && (
-            <button className="toggle-btn open-btn" onClick={() => setSidebarOpen(true)}>☰</button>
-          )}
+          <button className="toggle-btn open-btn" onClick={() => setSidebarOpen(true)}>☰</button>
           <img src={logo} alt="logo" className="header-logo" />
           <h1>{ui.assistant}</h1>
           <button className="settings-btn-header" onClick={() => setShowSettings(true)}>⚙️</button>
