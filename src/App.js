@@ -100,43 +100,40 @@ function applyFontSize(size) {
 
 function TTSButton({ text, lang, ui }) {
   const [speaking, setSpeaking] = useState(false)
+  const audioRef = useRef(null)
 
-  function toggleSpeak() {
+  async function toggleSpeak() {
     if (speaking) {
-      window.speechSynthesis.cancel()
+      if (audioRef.current) {
+        audioRef.current.pause()
+        audioRef.current = null
+      }
       setSpeaking(false)
       return
     }
+
     const cleanText = text
       .replace(/[#*`_]/g, '')
       .replace(/\[.*?\]/g, '')
-      .replace(/\d+%/g, '')
-      .replace(/taht-rayat[^\s]*/gi, '')
-      .replace(/qawasim-history[^\s]*/gi, '')
-      .replace(/··/g, '')
       .replace(/\s+/g, ' ')
       .trim()
 
-    const utterance = new SpeechSynthesisUtterance(cleanText)
-    utterance.lang = lang === 'ar' ? 'ar-SA' : 'en-US'
-    utterance.rate = 0.85
-    utterance.pitch = 1
-
-    const setVoiceAndSpeak = () => {
-      const voices = window.speechSynthesis.getVoices()
-      const arabicVoice = voices.find(v => v.lang.startsWith('ar') && v.localService)
-        || voices.find(v => v.lang.startsWith('ar'))
-      if (arabicVoice) utterance.voice = arabicVoice
-      utterance.onend = () => setSpeaking(false)
-      utterance.onerror = () => setSpeaking(false)
-      window.speechSynthesis.speak(utterance)
-      setSpeaking(true)
-    }
-
-    if (window.speechSynthesis.getVoices().length === 0) {
-      window.speechSynthesis.onvoiceschanged = setVoiceAndSpeak
-    } else {
-      setVoiceAndSpeak()
+    setSpeaking(true)
+    try {
+      const res = await fetch('https://hqbot-backend.onrender.com/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: cleanText })
+      })
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const audio = new Audio(url)
+      audioRef.current = audio
+      audio.onended = () => setSpeaking(false)
+      audio.onerror = () => setSpeaking(false)
+      audio.play()
+    } catch {
+      setSpeaking(false)
     }
   }
 
