@@ -12,38 +12,22 @@ const STORY_TOPICS = [
 ]
 
 const MOOD_CONFIG = {
-  sea: {
-    label: 'أمواج البحر', icon: '🌊',
-    color: '#38bdf8', colorDim: 'rgba(56,189,248,0.08)', colorBorder: 'rgba(56,189,248,0.2)',
-    gradient: 'radial-gradient(ellipse at 50% 100%, rgba(56,189,248,0.07) 0%, transparent 70%)',
-  },
-  desert: {
-    label: 'رياح الصحراء', icon: '🌵',
-    color: '#f59e0b', colorDim: 'rgba(245,158,11,0.08)', colorBorder: 'rgba(245,158,11,0.2)',
-    gradient: 'radial-gradient(ellipse at 50% 100%, rgba(245,158,11,0.07) 0%, transparent 70%)',
-  },
-  battle: {
-    label: 'أجواء المعركة', icon: '⚔️',
-    color: '#ef4444', colorDim: 'rgba(239,68,68,0.08)', colorBorder: 'rgba(239,68,68,0.2)',
-    gradient: 'radial-gradient(ellipse at 50% 100%, rgba(239,68,68,0.07) 0%, transparent 70%)',
-  },
-  palace: {
-    label: 'موسيقى القصر', icon: '🎵',
-    color: '#a78bfa', colorDim: 'rgba(167,139,250,0.08)', colorBorder: 'rgba(167,139,250,0.2)',
-    gradient: 'radial-gradient(ellipse at 50% 100%, rgba(167,139,250,0.07) 0%, transparent 70%)',
-  }
+  sea:    { label: 'أمواج البحر',    icon: '🌊', color: '#38bdf8', colorDim: 'rgba(56,189,248,0.08)',  colorBorder: 'rgba(56,189,248,0.2)',  gradient: 'radial-gradient(ellipse at 50% 100%, rgba(56,189,248,0.07) 0%, transparent 70%)' },
+  desert: { label: 'رياح الصحراء',  icon: '🌵', color: '#f59e0b', colorDim: 'rgba(245,158,11,0.08)', colorBorder: 'rgba(245,158,11,0.2)', gradient: 'radial-gradient(ellipse at 50% 100%, rgba(245,158,11,0.07) 0%, transparent 70%)' },
+  battle: { label: 'أجواء المعركة', icon: '⚔️', color: '#ef4444', colorDim: 'rgba(239,68,68,0.08)',   colorBorder: 'rgba(239,68,68,0.2)',   gradient: 'radial-gradient(ellipse at 50% 100%, rgba(239,68,68,0.07) 0%, transparent 70%)' },
+  palace: { label: 'موسيقى القصر',  icon: '🎵', color: '#a78bfa', colorDim: 'rgba(167,139,250,0.08)',colorBorder: 'rgba(167,139,250,0.2)', gradient: 'radial-gradient(ellipse at 50% 100%, rgba(167,139,250,0.07) 0%, transparent 70%)' },
 }
 
 function buildNoiseBuffer(ctx, duration, filterFreq, filterType, lfoFreq, lfoDepth) {
-  const sampleRate = ctx.sampleRate
-  const length = sampleRate * duration
-  const buffer = ctx.createBuffer(1, length, sampleRate)
-  const data = buffer.getChannelData(0)
-  for (let i = 0; i < length; i++) {
-    const lfo = 1 + lfoDepth * Math.sin((2 * Math.PI * lfoFreq * i) / sampleRate)
+  const sr = ctx.sampleRate
+  const len = sr * duration
+  const buf = ctx.createBuffer(1, len, sr)
+  const data = buf.getChannelData(0)
+  for (let i = 0; i < len; i++) {
+    const lfo = 1 + lfoDepth * Math.sin((2 * Math.PI * lfoFreq * i) / sr)
     data[i] = (Math.random() * 2 - 1) * lfo
   }
-  return buffer
+  return buf
 }
 
 function startAmbient(mood, volume) {
@@ -52,52 +36,44 @@ function startAmbient(mood, volume) {
     if (!AudioContext) return null
     const ctx = new AudioContext()
     const masterGain = ctx.createGain()
-    masterGain.gain.value = volume * 0.4
+    masterGain.gain.value = volume * 0.35
     masterGain.connect(ctx.destination)
 
     if (mood === 'palace') {
-      // Gentle drone tones for palace
-      const freqs = [110, 165, 220, 275]
-      freqs.forEach(freq => {
+      [110, 165, 220, 330].forEach(freq => {
         const osc = ctx.createOscillator()
         const g = ctx.createGain()
-        const lfoOsc = ctx.createOscillator()
+        const lfo = ctx.createOscillator()
         const lfoGain = ctx.createGain()
         osc.type = 'sine'
         osc.frequency.value = freq
-        lfoOsc.frequency.value = 0.2 + Math.random() * 0.3
-        lfoGain.gain.value = 0.3
-        lfoOsc.connect(lfoGain)
+        lfo.frequency.value = 0.15 + Math.random() * 0.2
+        lfoGain.gain.value = 0.25
+        g.gain.value = 0.055
+        lfo.connect(lfoGain)
         lfoGain.connect(g.gain)
-        g.gain.value = 0.06
         osc.connect(g)
         g.connect(masterGain)
-        osc.start()
-        lfoOsc.start()
+        osc.start(); lfo.start()
       })
     } else {
-      // Noise-based ambients
-      const configs = {
-        sea:    { filterFreq: 700,  filterType: 'lowpass',  lfoFreq: 0.15, lfoDepth: 0.7 },
-        desert: { filterFreq: 1200, filterType: 'bandpass', lfoFreq: 0.08, lfoDepth: 0.5 },
-        battle: { filterFreq: 300,  filterType: 'lowpass',  lfoFreq: 0.4,  lfoDepth: 0.9 },
+      const cfgs = {
+        sea:    { filterFreq: 600,  filterType: 'lowpass',  lfoFreq: 0.12, lfoDepth: 0.8 },
+        desert: { filterFreq: 1100, filterType: 'bandpass', lfoFreq: 0.07, lfoDepth: 0.6 },
+        battle: { filterFreq: 280,  filterType: 'lowpass',  lfoFreq: 0.35, lfoDepth: 1.0 },
       }
-      const cfg = configs[mood] || configs.sea
-      const duration = 8
-      const buffer = buildNoiseBuffer(ctx, duration, cfg.filterFreq, cfg.filterType, cfg.lfoFreq, cfg.lfoDepth)
-
-      const source = ctx.createBufferSource()
-      source.buffer = buffer
-      source.loop = true
-
+      const cfg = cfgs[mood] || cfgs.sea
+      const buf = buildNoiseBuffer(ctx, 8, cfg.filterFreq, cfg.filterType, cfg.lfoFreq, cfg.lfoDepth)
+      const src = ctx.createBufferSource()
+      src.buffer = buf
+      src.loop = true
       const filter = ctx.createBiquadFilter()
       filter.type = cfg.filterType
       filter.frequency.value = cfg.filterFreq
       if (cfg.filterType === 'bandpass') filter.Q.value = 0.8
-
-      source.connect(filter)
+      src.connect(filter)
       filter.connect(masterGain)
-      source.start()
+      src.start()
     }
 
     return { ctx, masterGain }
@@ -126,16 +102,14 @@ export default function Story({ onClose }) {
   const ambientRef = useRef(null)
   const voiceAudioRef = useRef(null)
   const typingRef = useRef(null)
+  const ttsTextRef = useRef('')
 
   useEffect(() => () => stopAll(), [])
 
   function stopAll() {
     if (typingRef.current) { clearInterval(typingRef.current); typingRef.current = null }
     if (voiceAudioRef.current) { voiceAudioRef.current.pause(); voiceAudioRef.current = null }
-    if (ambientRef.current) {
-      try { ambientRef.current.ctx.close() } catch {}
-      ambientRef.current = null
-    }
+    if (ambientRef.current) { try { ambientRef.current.ctx.close() } catch {} ambientRef.current = null }
   }
 
   async function startStory() {
@@ -147,6 +121,7 @@ export default function Story({ onClose }) {
       const res = await axios.post('https://hqbot-backend.onrender.com/api/story', { topic: finalTopic })
       const storyText = res.data.story
       const storyMood = res.data.mood || 'sea'
+      ttsTextRef.current = res.data.ttsText || storyText
       setStory(storyText)
       setMood(storyMood)
       setTypingDone(false)
@@ -162,13 +137,13 @@ export default function Story({ onClose }) {
   async function beginNarration(storyText, storyMood) {
     setIsPlaying(true)
 
-    // Start SFX immediately
+    // SFX starts immediately
     if (sfxEnabled) {
       const ambient = startAmbient(storyMood, sfxVolume)
       ambientRef.current = ambient
     }
 
-    // Start typewriter immediately
+    // Typewriter starts immediately
     let idx = 0
     typingRef.current = setInterval(() => {
       idx += 2
@@ -180,17 +155,17 @@ export default function Story({ onClose }) {
       } else {
         setDisplayed(storyText.slice(0, idx))
       }
-    }, 20)
+    }, 18)
 
-    // Load TTS in parallel — plays when ready
+    // TTS loads in parallel
     if (voiceEnabled) {
       setStatus('⏳ جاري تحميل الصوت...')
       try {
-        const cleanText = storyText.replace(/#+\s[^\n]*/g, '').replace(/\*+/g, '').trim()
+        const ttsText = ttsTextRef.current.slice(0, 4000)
         const res = await fetch('https://hqbot-backend.onrender.com/api/tts', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text: cleanText.slice(0, 4000) })
+          body: JSON.stringify({ text: ttsText })
         })
         if (!res.ok) throw new Error('TTS failed')
         const blob = await res.blob()
@@ -235,7 +210,7 @@ export default function Story({ onClose }) {
       setIsPlaying(false)
     } else {
       voiceAudioRef.current?.play()
-      if (ambientRef.current) ambientRef.current.masterGain.gain.value = sfxVolume * 0.4
+      if (ambientRef.current) ambientRef.current.masterGain.gain.value = sfxVolume * 0.35
       setIsPlaying(true)
     }
   }
@@ -243,7 +218,7 @@ export default function Story({ onClose }) {
   function handleSfxVolume(e) {
     const vol = parseFloat(e.target.value)
     setSfxVolume(vol)
-    if (ambientRef.current) ambientRef.current.masterGain.gain.value = vol * 0.4
+    if (ambientRef.current) ambientRef.current.masterGain.gain.value = vol * 0.35
   }
 
   function skipTyping() {
@@ -254,14 +229,9 @@ export default function Story({ onClose }) {
 
   function resetStory() {
     stopAll()
-    setPhase('setup')
-    setStory('')
-    setDisplayed('')
-    setTopic('')
-    setCustomTopic('')
-    setTypingDone(false)
-    setIsPlaying(false)
-    setStatus('')
+    setPhase('setup'); setStory(''); setDisplayed('')
+    setTopic(''); setCustomTopic(''); setTypingDone(false)
+    setIsPlaying(false); setStatus('')
   }
 
   const moodConfig = MOOD_CONFIG[mood] || MOOD_CONFIG.sea
@@ -274,7 +244,6 @@ export default function Story({ onClose }) {
         '--mood-border': moodConfig.colorBorder,
         '--mood-gradient': moodConfig.gradient
       }}>
-
         <div className="story-header">
           <span className="story-badge">📖 وضع القصة</span>
           <button className="story-close" onClick={() => { stopAll(); onClose() }}>✕</button>
@@ -298,11 +267,8 @@ export default function Story({ onClose }) {
 
             <div className="story-topics">
               {STORY_TOPICS.map(t => (
-                <button
-                  key={t.id}
-                  className={`story-topic-btn ${topic === t.label ? 'active' : ''}`}
-                  onClick={() => { setTopic(t.label); setCustomTopic(''); setMood(t.mood) }}
-                >
+                <button key={t.id} className={`story-topic-btn ${topic === t.label ? 'active' : ''}`}
+                  onClick={() => { setTopic(t.label); setCustomTopic(''); setMood(t.mood) }}>
                   <span className="story-topic-icon">{t.icon}</span>
                   <span style={{ flex: 1 }}>{t.label}</span>
                   <span className="story-topic-mood">{MOOD_CONFIG[t.mood].icon} {MOOD_CONFIG[t.mood].label}</span>
@@ -312,14 +278,11 @@ export default function Story({ onClose }) {
 
             <div className="story-divider"><span>أو اكتب موضوعك</span></div>
 
-            <input
-              className="story-input"
-              type="text"
+            <input className="story-input" type="text"
               placeholder="مثال: معركة القواسم مع الإنجليز..."
               value={customTopic}
               onChange={e => { setCustomTopic(e.target.value); setTopic('') }}
-              dir="rtl"
-            />
+              dir="rtl" />
 
             {error && <p className="story-error">{error}</p>}
 
@@ -339,14 +302,14 @@ export default function Story({ onClose }) {
         {phase === 'story' && (
           <div className="story-content">
             <div className="story-atmosphere-bg" />
-
             <div className="story-controls">
               <button className="story-play-btn" onClick={togglePlayPause}>
                 {isPlaying ? '⏸ إيقاف مؤقت' : '▶ تشغيل'}
               </button>
               <div className="story-vol-wrap">
                 <span className="story-vol-icon">🎵</span>
-                <input type="range" min="0" max="1" step="0.05" value={sfxVolume} onChange={handleSfxVolume} className="story-vol-slider" />
+                <input type="range" min="0" max="1" step="0.05" value={sfxVolume}
+                  onChange={handleSfxVolume} className="story-vol-slider" />
               </div>
               <div className="story-mood-badge">{moodConfig.icon} {moodConfig.label}</div>
               {status && <div className="story-status">{status}</div>}
