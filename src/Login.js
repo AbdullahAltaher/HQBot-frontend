@@ -110,13 +110,13 @@ export default function Login({ onEnter }) {
             مرحبااااا السااااع غناااتيييي
           </h2>
           <p style={{ color: 'rgba(255,255,255,0.7)', margin: '16px 0 32px', fontSize: 16 }}>
-            يسعدنا وجودك هنا ✨
+            منورة الموقع فديتج✨
           </p>
           <button
             className="login-btn"
             onClick={() => setStep('password')}
           >
-            ادخلي ←
+            فداا←
           </button>
         </div>
       )}
