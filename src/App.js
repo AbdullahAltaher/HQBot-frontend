@@ -6,6 +6,7 @@ import Login from './Login'
 import Settings from './Settings'
 import Quiz from './Quiz'
 import Story from './Story'
+import { useEntityProcessor } from './EntityText'
 import './App.css'
 
 const DEFAULT_SETTINGS = { theme: 'dark', fontSize: 'medium', language: 'ar', tts: false }
@@ -50,6 +51,32 @@ function saveSettings(s) { try { localStorage.setItem('app_settings', JSON.strin
 function applyTheme(t) { if (t === 'light') document.body.classList.add('light'); else document.body.classList.remove('light') }
 function applyFontSize(s) { document.documentElement.style.setProperty('--chat-font-size', FONT_SIZES[s]) }
 
+// Custom ReactMarkdown components that apply entity highlighting to text nodes
+function useMarkdownComponents() {
+  const processText = useEntityProcessor()
+
+  return {
+    p: ({ children }) => <p>{processChildren(children, processText)}</p>,
+    li: ({ children }) => <li>{processChildren(children, processText)}</li>,
+    strong: ({ children }) => <strong>{processChildren(children, processText)}</strong>,
+    h1: ({ children }) => <h1>{processChildren(children, processText)}</h1>,
+    h2: ({ children }) => <h2>{processChildren(children, processText)}</h2>,
+    h3: ({ children }) => <h3>{processChildren(children, processText)}</h3>,
+  }
+}
+
+function processChildren(children, processText) {
+  if (!children) return children
+  if (typeof children === 'string') return processText(children)
+  if (Array.isArray(children)) {
+    return children.map((child, i) => {
+      if (typeof child === 'string') return <span key={i}>{processText(child)}</span>
+      return child
+    })
+  }
+  return children
+}
+
 function TTSButton({ text, ui }) {
   const [speaking, setSpeaking] = useState(false)
   const audioRef = useRef(null)
@@ -81,12 +108,13 @@ function CopyButton({ text, ui }) {
 
 function AssistantMessage({ msg, settings, ui, onSendMessage }) {
   const questions = msg.suggestedQuestions || []
+  const components = useMarkdownComponents()
   return (
     <div className="message assistant">
       <div className="assistant-row">
         <div className="ai-avatar"><img src={logo} alt="logo" style={{ width: 14, height: 14 }} /></div>
         <div className="assistant-bubble" dir="auto">
-          <ReactMarkdown>{msg.text}</ReactMarkdown>
+          <ReactMarkdown components={components}>{msg.text}</ReactMarkdown>
           {questions.length > 0 && (
             <div className="related-questions">
               <p className="related-title">◆ {ui.related}</p>
@@ -114,6 +142,8 @@ function TypingMessage({ fullText, sources, suggestedQuestions, onDone, settings
   const [displayed, setDisplayed] = useState('')
   const [done, setDone] = useState(false)
   const idx = useRef(0)
+  const components = useMarkdownComponents()
+
   useEffect(() => {
     if (!fullText) return
     idx.current = 0; setDisplayed(''); setDone(false)
@@ -124,13 +154,15 @@ function TypingMessage({ fullText, sources, suggestedQuestions, onDone, settings
     }, 12)
     return () => clearInterval(iv)
   }, [fullText])
+
   const questions = done ? (suggestedQuestions || []) : []
+
   return (
     <div className="message assistant">
       <div className="assistant-row">
         <div className="ai-avatar"><img src={logo} alt="logo" style={{ width: 14, height: 14 }} /></div>
         <div className="assistant-bubble" dir="auto">
-          <ReactMarkdown>{displayed}</ReactMarkdown>
+          <ReactMarkdown components={components}>{displayed}</ReactMarkdown>
           {!done && <span className="cursor" />}
           {done && questions.length > 0 && (
             <div className="related-questions">
@@ -241,7 +273,7 @@ export default function App() {
 
   function createNewChat(username) {
     const id = `chat_${Date.now()}_${chatIdCounter++}`
-    const newC = { id, title: ui.newChat.replace('+ ', ''), messages: [] }
+    const newC = { id, title: 'محادثة جديدة', messages: [] }
     setChats(prev => { const u = [newC, ...prev]; saveChatsToStorage(username || user, u); return u })
     setActiveChatId(id); setInput('')
     if (isMobile) setSidebarOpen(false)
@@ -273,7 +305,10 @@ export default function App() {
       const res = await axios.post('https://hqbot-backend.onrender.com/api/chat', {
         question, history: currentMessages.slice(-6).map(m => ({ role: m.role, text: m.text }))
       })
-      const withAnswer = [...newMessages, { role: 'assistant', text: res.data.answer, sources: res.data.sources, suggestedQuestions: res.data.suggestedQuestions || [], typing: true }]
+      const withAnswer = [...newMessages, {
+        role: 'assistant', text: res.data.answer, sources: res.data.sources,
+        suggestedQuestions: res.data.suggestedQuestions || [], typing: true
+      }]
       updateChats(updatedWithUser.map(c => c.id === currentChatId ? { ...c, messages: withAnswer, title } : c))
     } catch {
       const withError = [...newMessages, { role: 'assistant', text: ui.error, typing: true }]
@@ -306,7 +341,7 @@ export default function App() {
         </div>
         <div className="chat-list">
           {chats.length === 0 ? (
-            <div style={{ padding: '20px', textAlign: 'center', color: 'var(--ink-ghost)', fontSize: 12, fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>{ui.noChats}</div>
+            <div style={{ padding: '20px', textAlign: 'center', color: 'var(--ink-ghost)', fontSize: 11, fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>{ui.noChats}</div>
           ) : chats.map(chat => (
             <ChatItem key={chat.id} chat={chat} active={chat.id === activeChatId}
               onClick={() => { setActiveChatId(chat.id); if (isMobile) setSidebarOpen(false) }}
