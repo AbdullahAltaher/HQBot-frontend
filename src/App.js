@@ -45,8 +45,8 @@ const UI = {
 }
 
 const SUGGESTIONS = {
-  ar: ['من هم القواسم؟', 'ما هي معاهدة 1820؟', 'ما تاريخ نجد وآل سعود؟', 'من هو سلطان بن صقر؟'],
-  en: ['Who are the Qawasim?', 'What is the 1820 treaty?', 'History of Najd and Al Saud?', 'Who is Sultan bin Saqr?']
+  ar: ['كيف كانت الاوضاع في الشارقة اثناء الحرب العالمية الثانية؟', 'ماهو سبب انفصال رأس الخيمة عن الشارقة؟', 'ما تاريخ نجد وآل سعود؟', 'من هو سلطان بن صقر؟'],
+  en: ['What was the situation like in Sharjah during World War II?', 'Why did Ras Al Khaimah separate from Sharjah?', 'History of Najd and Al Saud?', 'Who is Sultan bin Saqr?']
 }
 
 let chatIdCounter = 1
