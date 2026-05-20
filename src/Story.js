@@ -12,10 +12,10 @@ const STORY_TOPICS = [
 ]
 
 const MOOD_CONFIG = {
-  sea:    { label: 'أمواج البحر',    icon: '🌊', color: '#38bdf8', colorDim: 'rgba(56,189,248,0.08)',  colorBorder: 'rgba(56,189,248,0.2)',  gradient: 'radial-gradient(ellipse at 50% 100%, rgba(56,189,248,0.07) 0%, transparent 70%)' },
-  desert: { label: 'رياح الصحراء',  icon: '🌵', color: '#f59e0b', colorDim: 'rgba(245,158,11,0.08)', colorBorder: 'rgba(245,158,11,0.2)', gradient: 'radial-gradient(ellipse at 50% 100%, rgba(245,158,11,0.07) 0%, transparent 70%)' },
-  battle: { label: 'أجواء المعركة', icon: '⚔️', color: '#ef4444', colorDim: 'rgba(239,68,68,0.08)',   colorBorder: 'rgba(239,68,68,0.2)',   gradient: 'radial-gradient(ellipse at 50% 100%, rgba(239,68,68,0.07) 0%, transparent 70%)' },
-  palace: { label: 'موسيقى القصر',  icon: '🎵', color: '#a78bfa', colorDim: 'rgba(167,139,250,0.08)',colorBorder: 'rgba(167,139,250,0.2)', gradient: 'radial-gradient(ellipse at 50% 100%, rgba(167,139,250,0.07) 0%, transparent 70%)' },
+  sea:    { label: 'أمواج البحر',    icon: '🌊', color: '#c9a84c', colorDim: 'rgba(201,168,76,0.08)',  colorBorder: 'rgba(201,168,76,0.2)',  gradient: 'radial-gradient(ellipse at 50% 100%, rgba(201,168,76,0.05) 0%, transparent 70%)' },
+  desert: { label: 'رياح الصحراء',  icon: '🌵', color: '#d4915a', colorDim: 'rgba(212,145,90,0.08)', colorBorder: 'rgba(212,145,90,0.2)', gradient: 'radial-gradient(ellipse at 50% 100%, rgba(212,145,90,0.05) 0%, transparent 70%)' },
+  battle: { label: 'أجواء المعركة', icon: '⚔️', color: '#c05050', colorDim: 'rgba(192,80,80,0.08)',   colorBorder: 'rgba(192,80,80,0.2)',   gradient: 'radial-gradient(ellipse at 50% 100%, rgba(192,80,80,0.05) 0%, transparent 70%)' },
+  palace: { label: 'موسيقى القصر',  icon: '🎵', color: '#9b7fb5', colorDim: 'rgba(155,127,181,0.08)',colorBorder: 'rgba(155,127,181,0.2)', gradient: 'radial-gradient(ellipse at 50% 100%, rgba(155,127,181,0.05) 0%, transparent 70%)' },
 }
 
 function buildNoiseBuffer(ctx, duration, filterFreq, filterType, lfoFreq, lfoDepth) {
@@ -50,10 +50,8 @@ function startAmbient(mood, volume) {
         lfo.frequency.value = 0.15 + Math.random() * 0.2
         lfoGain.gain.value = 0.25
         g.gain.value = 0.055
-        lfo.connect(lfoGain)
-        lfoGain.connect(g.gain)
-        osc.connect(g)
-        g.connect(masterGain)
+        lfo.connect(lfoGain); lfoGain.connect(g.gain)
+        osc.connect(g); g.connect(masterGain)
         osc.start(); lfo.start()
       })
     } else {
@@ -65,17 +63,14 @@ function startAmbient(mood, volume) {
       const cfg = cfgs[mood] || cfgs.sea
       const buf = buildNoiseBuffer(ctx, 8, cfg.filterFreq, cfg.filterType, cfg.lfoFreq, cfg.lfoDepth)
       const src = ctx.createBufferSource()
-      src.buffer = buf
-      src.loop = true
+      src.buffer = buf; src.loop = true
       const filter = ctx.createBiquadFilter()
       filter.type = cfg.filterType
       filter.frequency.value = cfg.filterFreq
       if (cfg.filterType === 'bandpass') filter.Q.value = 0.8
-      src.connect(filter)
-      filter.connect(masterGain)
+      src.connect(filter); filter.connect(masterGain)
       src.start()
     }
-
     return { ctx, masterGain }
   } catch (e) {
     console.error('SFX error:', e)
@@ -136,14 +131,10 @@ export default function Story({ onClose }) {
 
   async function beginNarration(storyText, storyMood) {
     setIsPlaying(true)
-
-    // SFX starts immediately
     if (sfxEnabled) {
       const ambient = startAmbient(storyMood, sfxVolume)
       ambientRef.current = ambient
     }
-
-    // Typewriter starts immediately
     let idx = 0
     typingRef.current = setInterval(() => {
       idx += 2
@@ -156,10 +147,8 @@ export default function Story({ onClose }) {
         setDisplayed(storyText.slice(0, idx))
       }
     }, 18)
-
-    // TTS loads in parallel
     if (voiceEnabled) {
-      setStatus('⏳ جاري تحميل الصوت...')
+      setStatus('⏳ تحميل الصوت...')
       try {
         const ttsText = ttsTextRef.current.slice(0, 4000)
         const res = await fetch('https://hqbot-backend.onrender.com/api/tts', {
@@ -197,9 +186,7 @@ export default function Story({ onClose }) {
         clearInterval(fade)
         try { ambientRef.current?.ctx.close() } catch {}
         ambientRef.current = null
-      } else {
-        gain.gain.value = vol
-      }
+      } else { gain.gain.value = vol }
     }, 80)
   }
 
@@ -286,15 +273,16 @@ export default function Story({ onClose }) {
 
             {error && <p className="story-error">{error}</p>}
 
-            <button className="story-start-btn" onClick={startStory} disabled={(!topic && !customTopic.trim()) || loading}>
+            <button className="story-start-btn" onClick={startStory}
+              disabled={(!topic && !customTopic.trim()) || loading}>
               {loading ? (
                 <div className="story-loading">
                   <span className="story-dot" />
                   <span className="story-dot" style={{ animationDelay: '0.2s' }} />
                   <span className="story-dot" style={{ animationDelay: '0.4s' }} />
-                  <span style={{ marginRight: 8, fontSize: 13 }}>يُنسج السرد...</span>
+                  <span style={{ marginRight: 8, fontSize: 12 }}>يُنسج السرد...</span>
                 </div>
-              ) : '✨ ابدأ القصة المنطوقة'}
+              ) : '◆ ابدأ القصة المنطوقة'}
             </button>
           </div>
         )}
@@ -304,7 +292,7 @@ export default function Story({ onClose }) {
             <div className="story-atmosphere-bg" />
             <div className="story-controls">
               <button className="story-play-btn" onClick={togglePlayPause}>
-                {isPlaying ? '⏸ إيقاف مؤقت' : '▶ تشغيل'}
+                {isPlaying ? '⏸ إيقاف' : '▶ تشغيل'}
               </button>
               <div className="story-vol-wrap">
                 <span className="story-vol-icon">🎵</span>
@@ -326,7 +314,7 @@ export default function Story({ onClose }) {
               {!typingDone && <button className="story-skip-btn" onClick={skipTyping}>تخطي ←</button>}
               {typingDone && (
                 <>
-                  <button className="story-start-btn" style={{ flex: 2 }} onClick={resetStory}>✨ قصة جديدة</button>
+                  <button className="story-start-btn" style={{ flex: 2 }} onClick={resetStory}>◆ قصة جديدة</button>
                   <button className="story-outline-btn" style={{ flex: 1 }} onClick={() => { stopAll(); onClose() }}>إغلاق</button>
                 </>
               )}

@@ -9,9 +9,9 @@ const BOOKS = [
 ]
 
 const DIFFICULTIES = [
-  { id: 'easy', label: 'سهل', color: '#4ade80' },
-  { id: 'medium', label: 'متوسط', color: '#38bdf8' },
-  { id: 'hard', label: 'صعب', color: '#f87171' },
+  { id: 'easy',   label: 'سهل',   color: 'rgba(74,160,74,0.8)' },
+  { id: 'medium', label: 'متوسط', color: 'rgba(201,168,76,0.8)' },
+  { id: 'hard',   label: 'صعب',   color: 'rgba(220,80,80,0.8)' },
 ]
 
 export default function Quiz({ onClose }) {
@@ -31,10 +31,7 @@ export default function Quiz({ onClose }) {
     setLoading(true)
     setError('')
     try {
-      const res = await axios.post('https://hqbot-backend.onrender.com/api/quiz', {
-        book,
-        difficulty
-      })
+      const res = await axios.post('https://hqbot-backend.onrender.com/api/quiz', { book, difficulty })
       setQuestions(res.data.questions)
       setCurrent(0)
       setSelected(null)
@@ -51,11 +48,7 @@ export default function Quiz({ onClose }) {
     if (selected !== null) return
     setSelected(idx)
     setShowExplanation(true)
-    setAnswers(prev => [...prev, {
-      question: current,
-      selected: idx,
-      correct: questions[current].correct
-    }])
+    setAnswers(prev => [...prev, { question: current, selected: idx, correct: questions[current].correct }])
   }
 
   function nextQuestion() {
@@ -76,7 +69,7 @@ export default function Quiz({ onClose }) {
 
         <div className="quiz-header">
           <div className="quiz-header-left">
-            <span className="quiz-badge">🎯 وضع الاختبار</span>
+            <span className="quiz-badge">🎯 الاختبار</span>
             {phase === 'quiz' && (
               <span className="quiz-progress">{current + 1} / {questions.length}</span>
             )}
@@ -93,11 +86,8 @@ export default function Quiz({ onClose }) {
             <div className="quiz-section-label">الكتاب</div>
             <div className="quiz-book-grid">
               {BOOKS.map(b => (
-                <button
-                  key={b.id}
-                  className={`quiz-book-btn ${book === b.id ? 'active' : ''}`}
-                  onClick={() => setBook(b.id)}
-                >
+                <button key={b.id} className={`quiz-book-btn ${book === b.id ? 'active' : ''}`}
+                  onClick={() => setBook(b.id)}>
                   📖 {b.label}
                 </button>
               ))}
@@ -106,12 +96,10 @@ export default function Quiz({ onClose }) {
             <div className="quiz-section-label">المستوى</div>
             <div className="quiz-diff-grid">
               {DIFFICULTIES.map(d => (
-                <button
-                  key={d.id}
+                <button key={d.id}
                   className={`quiz-diff-btn ${difficulty === d.id ? 'active' : ''}`}
-                  style={difficulty === d.id ? { borderColor: d.color, color: d.color, background: `${d.color}12` } : {}}
-                  onClick={() => setDifficulty(d.id)}
-                >
+                  style={difficulty === d.id ? { borderColor: d.color, color: d.color, background: `${d.color.replace('0.8', '0.08')}` } : {}}
+                  onClick={() => setDifficulty(d.id)}>
                   {d.label}
                 </button>
               ))}
@@ -119,18 +107,14 @@ export default function Quiz({ onClose }) {
 
             {error && <p className="quiz-error">{error}</p>}
 
-            <button
-              className="quiz-start-btn"
-              onClick={startQuiz}
-              disabled={!book || loading}
-            >
+            <button className="quiz-start-btn" onClick={startQuiz} disabled={!book || loading}>
               {loading ? (
                 <span className="quiz-loading">
                   <span className="quiz-dot" />
                   <span className="quiz-dot" style={{ animationDelay: '0.2s' }} />
                   <span className="quiz-dot" style={{ animationDelay: '0.4s' }} />
                 </span>
-              ) : 'ابدأ الاختبار ←'}
+              ) : '◆ ابدأ الاختبار'}
             </button>
           </div>
         )}
@@ -139,10 +123,7 @@ export default function Quiz({ onClose }) {
         {phase === 'quiz' && questions[current] && (
           <div className="quiz-question-wrap">
             <div className="quiz-progress-bar">
-              <div
-                className="quiz-progress-fill"
-                style={{ width: `${((current) / questions.length) * 100}%` }}
-              />
+              <div className="quiz-progress-fill" style={{ width: `${(current / questions.length) * 100}%` }} />
             </div>
 
             <div className="quiz-score-live">
@@ -160,15 +141,8 @@ export default function Quiz({ onClose }) {
                   else cls += ' dim'
                 }
                 return (
-                  <button
-                    key={idx}
-                    className={cls}
-                    onClick={() => handleAnswer(idx)}
-                    dir="rtl"
-                  >
-                    <span className="quiz-option-letter">
-                      {['أ', 'ب', 'ج', 'د'][idx]}
-                    </span>
+                  <button key={idx} className={cls} onClick={() => handleAnswer(idx)} dir="rtl">
+                    <span className="quiz-option-letter">{['أ','ب','ج','د'][idx]}</span>
                     {opt}
                   </button>
                 )
@@ -184,7 +158,7 @@ export default function Quiz({ onClose }) {
 
             {selected !== null && (
               <button className="quiz-next-btn" onClick={nextQuestion}>
-                {current + 1 >= questions.length ? 'عرض النتيجة' : 'السؤال التالي ←'}
+                {current + 1 >= questions.length ? 'عرض النتيجة ◆' : 'التالي ←'}
               </button>
             )}
           </div>
@@ -199,10 +173,10 @@ export default function Quiz({ onClose }) {
             </div>
 
             <h2 className="quiz-result-title">
-              {score === questions.length ? '🏆 ممتاز! أتقنت الكتاب' :
-               score >= questions.length * 0.7 ? '🎉 أحسنت! نتيجة جيدة' :
-               score >= questions.length * 0.4 ? '📚 جيد، استمر في التعلم' :
-               '💪 حاول مرة أخرى'}
+              {score === questions.length ? '◆ ممتاز — أتقنت الكتاب' :
+               score >= questions.length * 0.7 ? '◆ أحسنت — نتيجة جيدة' :
+               score >= questions.length * 0.4 ? '◆ جيد — استمر في التعلم' :
+               '◆ حاول مرة أخرى'}
             </h2>
 
             <div className="quiz-answers-review">
@@ -220,20 +194,14 @@ export default function Quiz({ onClose }) {
 
             <div className="quiz-result-btns">
               <button className="quiz-start-btn" onClick={() => {
-                setPhase('setup')
-                setBook('')
-                setQuestions([])
-                setAnswers([])
+                setPhase('setup'); setBook(''); setQuestions([]); setAnswers([])
               }}>
-                اختبار جديد
+                ◆ اختبار جديد
               </button>
-              <button className="quiz-outline-btn" onClick={onClose}>
-                إغلاق
-              </button>
+              <button className="quiz-outline-btn" onClick={onClose}>إغلاق</button>
             </div>
           </div>
         )}
-
       </div>
     </div>
   )

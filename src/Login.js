@@ -11,18 +11,13 @@ export default function Login({ onEnter }) {
 
   const CORRECT_PASSWORD = 'q2024'
 
-  function handleSplash() {
-    setStep('name')
-  }
+  function handleSplash() { setStep('name') }
 
   function handleName(e) {
     e.preventDefault()
     if (!name.trim()) return
-    if (name.trim().toLowerCase() === 'soso') {
-      setStep('soso')
-    } else {
-      setStep('password')
-    }
+    if (name.trim().toLowerCase() === 'soso') setStep('soso')
+    else setStep('password')
   }
 
   function handlePassword(e) {
@@ -30,12 +25,8 @@ export default function Login({ onEnter }) {
     setLoading(true)
     setError('')
     setTimeout(() => {
-      if (password === CORRECT_PASSWORD) {
-        onEnter(name.trim())
-      } else {
-        setError('كلمة المرور غير صحيحة')
-        setLoading(false)
-      }
+      if (password === CORRECT_PASSWORD) onEnter(name.trim())
+      else { setError('كلمة المرور غير صحيحة'); setLoading(false) }
     }, 600)
   }
 
@@ -54,24 +45,14 @@ export default function Login({ onEnter }) {
             مبني على مصادر موثقة من مكتبة سلطان القاسمي
           </p>
           <div className="login-features">
-            <div className="feature">
-              <span>📚</span>
-              <span>مصادر موثقة</span>
-            </div>
-            <div className="feature">
-              <span>🔍</span>
-              <span>بحث دقيق</span>
-            </div>
-            <div className="feature">
-              <span>🤖</span>
-              <span>ذكاء اصطناعي</span>
-            </div>
+            <div className="feature"><span>📚</span><span>مصادر موثقة</span></div>
+            <div className="feature"><span>🔍</span><span>بحث دقيق</span></div>
+            <div className="feature"><span>🤖</span><span>ذكاء اصطناعي</span></div>
           </div>
           <button className="login-btn" onClick={handleSplash}>
-            ابدأ الآن
-            <span>←</span>
+            ادخل إلى المكتبة <span>◆</span>
           </button>
-          <p className="login-hint">مدعوم بتقنية Claude AI · Cohere · pgvector</p>
+          <p className="login-hint">POWERED BY CLAUDE AI · RAG · PGVECTOR</p>
         </div>
       )}
 
@@ -79,44 +60,30 @@ export default function Login({ onEnter }) {
       {step === 'name' && (
         <div className="login-card animate-in">
           <img src={logo} alt="logo" className="login-logo-sm" />
-          <h2 className="login-card-title">أهلاً بك 👋</h2>
+          <h2 className="login-card-title">أهلاً بك</h2>
           <p className="login-card-desc">ما اسمك؟ حتى نستطيع مخاطبتك</p>
           <form onSubmit={handleName} className="login-form">
-            <input
-              className="login-input"
-              type="text"
-              placeholder="اكتب اسمك هنا..."
-              value={name}
-              onChange={e => setName(e.target.value)}
-              dir="auto"
-              autoFocus
-            />
-            <button
-              className="login-btn"
-              type="submit"
-              disabled={!name.trim()}
-            >
-              التالي ←
+            <input className="login-input" type="text" placeholder="اكتب اسمك هنا..."
+              value={name} onChange={e => setName(e.target.value)} dir="auto" autoFocus />
+            <button className="login-btn" type="submit" disabled={!name.trim()}>
+              التالي ◆
             </button>
           </form>
         </div>
       )}
 
-      {/* SOSO SPECIAL PAGE */}
+      {/* SOSO SPECIAL */}
       {step === 'soso' && (
         <div className="login-card animate-in" style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 60, marginBottom: 16 }}>🌸💕</div>
-          <h2 className="login-card-title" style={{ fontSize: 28, lineHeight: 1.6 }}>
+          <div style={{ fontSize: 56, marginBottom: 12 }}>🌸</div>
+          <h2 className="login-card-title" style={{ fontSize: 24, lineHeight: 1.7 }}>
             مرحبااااا السااااع غناااتيييي
           </h2>
-          <p style={{ color: 'rgba(255,255,255,0.7)', margin: '16px 0 32px', fontSize: 16 }}>
-            منورة الموقع فديتج✨
+          <p style={{ color: 'rgba(226,217,200,0.45)', margin: '12px 0 28px', fontSize: 14, fontFamily: 'Noto Naskh Arabic, serif' }}>
+            منورة الموقع فديتج ✨
           </p>
-          <button
-            className="login-btn"
-            onClick={() => setStep('password')}
-          >
-            فداا←
+          <button className="login-btn" onClick={() => setStep('password')}>
+            فدا ◆
           </button>
         </div>
       )}
@@ -125,29 +92,18 @@ export default function Login({ onEnter }) {
       {step === 'password' && (
         <div className="login-card animate-in">
           <img src={logo} alt="logo" className="login-logo-sm" />
-          <h2 className="login-card-title">مرحباً {name}! 🔐</h2>
-          <p className="login-card-desc">أدخل كلمة المرور للدخول</p>
+          <h2 className="login-card-title">مرحباً {name}</h2>
+          <p className="login-card-desc">أدخل كلمة المرور للدخول إلى المكتبة</p>
           <form onSubmit={handlePassword} className="login-form">
-            <input
-              className={`login-input ${error ? 'error' : ''}`}
-              type="password"
-              placeholder="كلمة المرور..."
-              value={password}
-              onChange={e => { setPassword(e.target.value); setError('') }}
-              autoFocus
-            />
+            <input className={`login-input ${error ? 'error' : ''}`} type="password"
+              placeholder="كلمة المرور..." value={password}
+              onChange={e => { setPassword(e.target.value); setError('') }} autoFocus />
             {error && <p className="login-error">{error}</p>}
-            <button
-              className="login-btn"
-              type="submit"
-              disabled={!password || loading}
-            >
-              {loading ? '...' : 'دخول ←'}
+            <button className="login-btn" type="submit" disabled={!password || loading}>
+              {loading ? '...' : 'دخول ◆'}
             </button>
           </form>
-          <button className="back-btn" onClick={() => setStep('name')}>
-            ← رجوع
-          </button>
+          <button className="back-btn" onClick={() => setStep('name')}>← رجوع</button>
         </div>
       )}
     </div>
