@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import axios from 'axios'
 import ReactMarkdown from 'react-markdown'
+import { createClient } from '@supabase/supabase-js'
 import logo from './qawasim_chatbot_logo.svg'
 import Login from './Login'
 import Settings from './Settings'
@@ -8,6 +9,12 @@ import Quiz from './Quiz'
 import Story from './Story'
 import { useEntityProcessor } from './EntityText'
 import './App.css'
+
+// Supabase client — uses public anon key (read/write to conversations table only)
+const supabase = createClient(
+  process.env.REACT_APP_SUPABASE_URL,
+  process.env.REACT_APP_SUPABASE_ANON_KEY
+)
 
 const DEFAULT_SETTINGS = { theme: 'dark', fontSize: 'medium', language: 'ar', tts: false }
 const FONT_SIZES = { small: '13px', medium: '15px', large: '18px' }
@@ -44,17 +51,50 @@ const SUGGESTIONS = {
 
 let chatIdCounter = 1
 
-function loadChatsFromStorage(u) { try { const d = localStorage.getItem(`chats_${u}`); return d ? JSON.parse(d) : [] } catch { return [] } }
-function saveChatsToStorage(u, c) { try { localStorage.setItem(`chats_${u}`, JSON.stringify(c)) } catch {} }
+// ── Supabase helpers ──
+async function dbLoadChats(username) {
+  try {
+    const { data, error } = await supabase
+      .from('conversations')
+      .select('*')
+      .eq('username', username.toLowerCase())
+      .order('updated_at', { ascending: false })
+    if (error) throw error
+    return data.map(row => ({
+      id: row.id,
+      title: row.title,
+      messages: row.messages || []
+    }))
+  } catch { return [] }
+}
+
+async function dbSaveChat(username, chat) {
+  try {
+    await supabase.from('conversations').upsert({
+      id: chat.id,
+      username: username.toLowerCase(),
+      title: chat.title,
+      messages: chat.messages,
+      updated_at: new Date().toISOString()
+    })
+  } catch (e) { console.error('DB save error:', e) }
+}
+
+async function dbDeleteChat(id) {
+  try {
+    await supabase.from('conversations').delete().eq('id', id)
+  } catch (e) { console.error('DB delete error:', e) }
+}
+
+// ── Local storage (fallback cache) ──
 function loadSettings() { try { const d = localStorage.getItem('app_settings'); return d ? { ...DEFAULT_SETTINGS, ...JSON.parse(d) } : DEFAULT_SETTINGS } catch { return DEFAULT_SETTINGS } }
 function saveSettings(s) { try { localStorage.setItem('app_settings', JSON.stringify(s)) } catch {} }
 function applyTheme(t) { if (t === 'light') document.body.classList.add('light'); else document.body.classList.remove('light') }
 function applyFontSize(s) { document.documentElement.style.setProperty('--chat-font-size', FONT_SIZES[s]) }
 
-// Custom ReactMarkdown components that apply entity highlighting to text nodes
+// ── Markdown with entity highlighting ──
 function useMarkdownComponents() {
   const processText = useEntityProcessor()
-
   return {
     p: ({ children }) => <p>{processChildren(children, processText)}</p>,
     li: ({ children }) => <li>{processChildren(children, processText)}</li>,
@@ -77,6 +117,7 @@ function processChildren(children, processText) {
   return children
 }
 
+// ── UI Components ──
 function TTSButton({ text, ui }) {
   const [speaking, setSpeaking] = useState(false)
   const audioRef = useRef(null)
@@ -231,6 +272,7 @@ function ChatItem({ chat, active, onClick, onDelete, onRename }) {
   )
 }
 
+// ── Main App ──
 export default function App() {
   const [user, setUser] = useState(null)
   const [chats, setChats] = useState([])
@@ -261,46 +303,77 @@ export default function App() {
   useEffect(() => { applyTheme(settings.theme); applyFontSize(settings.fontSize) }, [settings])
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages, loading])
 
+  // Load chats from Supabase on login
   useEffect(() => {
     if (!user) return
-    const saved = loadChatsFromStorage(user)
-    if (saved.length > 0) { setChats(saved); setActiveChatId(saved[0].id) }
-    else createNewChat(user)
+    dbLoadChats(user).then(saved => {
+      if (saved.length > 0) {
+        setChats(saved)
+        setActiveChatId(saved[0].id)
+      } else {
+        createNewChat(user)
+      }
+    })
   }, [user])
 
   function handleSettingsChange(s) { setSettings(s); saveSettings(s); applyTheme(s.theme); applyFontSize(s.fontSize) }
-  function handleLogout() { window.speechSynthesis?.cancel(); setUser(null); setChats([]); setActiveChatId(null); setShowSettings(false) }
+  function handleLogout() {
+    window.speechSynthesis?.cancel()
+    setUser(null); setChats([]); setActiveChatId(null); setShowSettings(false)
+  }
 
   function createNewChat(username) {
     const id = `chat_${Date.now()}_${chatIdCounter++}`
     const newC = { id, title: 'محادثة جديدة', messages: [] }
-    setChats(prev => { const u = [newC, ...prev]; saveChatsToStorage(username || user, u); return u })
+    setChats(prev => [newC, ...prev])
     setActiveChatId(id); setInput('')
     if (isMobile) setSidebarOpen(false)
+    dbSaveChat(username || user, newC)
     return id
   }
 
-  function updateChats(u) { setChats(u); saveChatsToStorage(user, u) }
+  function updateChats(updatedChats, changedChat) {
+    setChats(updatedChats)
+    if (changedChat) dbSaveChat(user, changedChat)
+  }
+
   function deleteChat(id) {
     const r = chats.filter(c => c.id !== id)
+    dbDeleteChat(id)
     if (r.length === 0) createNewChat()
-    else { updateChats(r); if (activeChatId === id) setActiveChatId(r[0].id) }
+    else {
+      setChats(r)
+      if (activeChatId === id) setActiveChatId(r[0].id)
+    }
   }
-  function renameChat(id, t) { updateChats(chats.map(c => c.id === id ? { ...c, title: t } : c)) }
+
+  function renameChat(id, t) {
+    const updated = chats.map(c => c.id === id ? { ...c, title: t } : c)
+    const changed = updated.find(c => c.id === id)
+    updateChats(updated, changed)
+  }
 
   const sendMessage = useCallback(async (text) => {
     const question = text || input.trim()
     if (!question || loading) return
+
     let currentChatId = activeChatId
     if (!currentChatId) currentChatId = createNewChat()
-    setInput(''); if (isMobile) setSidebarOpen(false)
+
+    setInput('')
+    if (isMobile) setSidebarOpen(false)
     if (textareaRef.current) textareaRef.current.style.height = 'auto'
+
     const currentMessages = chats.find(c => c.id === currentChatId)?.messages || []
     const newMessages = [...currentMessages, { role: 'user', text: question }]
     const firstUser = newMessages.find(m => m.role === 'user')
     const title = firstUser ? firstUser.text.slice(0, 30) + (firstUser.text.length > 30 ? '...' : '') : 'محادثة'
+
     const updatedWithUser = chats.map(c => c.id === currentChatId ? { ...c, messages: newMessages, title } : c)
-    updateChats(updatedWithUser); setLoading(true)
+    const userChat = updatedWithUser.find(c => c.id === currentChatId)
+    updateChats(updatedWithUser, userChat)
+    setLoading(true)
+
     try {
       const res = await axios.post('https://hqbot-backend.onrender.com/api/chat', {
         question, history: currentMessages.slice(-6).map(m => ({ role: m.role, text: m.text }))
@@ -309,10 +382,14 @@ export default function App() {
         role: 'assistant', text: res.data.answer, sources: res.data.sources,
         suggestedQuestions: res.data.suggestedQuestions || [], typing: true
       }]
-      updateChats(updatedWithUser.map(c => c.id === currentChatId ? { ...c, messages: withAnswer, title } : c))
+      const finalChats = updatedWithUser.map(c => c.id === currentChatId ? { ...c, messages: withAnswer, title } : c)
+      const finalChat = finalChats.find(c => c.id === currentChatId)
+      updateChats(finalChats, finalChat)
     } catch {
       const withError = [...newMessages, { role: 'assistant', text: ui.error, typing: true }]
-      updateChats(updatedWithUser.map(c => c.id === currentChatId ? { ...c, messages: withError, title } : c))
+      const errorChats = updatedWithUser.map(c => c.id === currentChatId ? { ...c, messages: withError, title } : c)
+      const errorChat = errorChats.find(c => c.id === currentChatId)
+      updateChats(errorChats, errorChat)
     }
     setLoading(false)
   }, [input, loading, chats, activeChatId, user, ui, isMobile])
@@ -405,10 +482,18 @@ export default function App() {
               <TypingMessage key={i} fullText={msg.text} sources={msg.sources}
                 suggestedQuestions={msg.suggestedQuestions || []} settings={settings} ui={ui}
                 onSendMessage={sendMessage}
-                onDone={() => setChats(prev => {
-                  const u = prev.map(c => { if (c.id !== activeChatId) return c; return { ...c, messages: c.messages.map((m, idx) => idx === i ? { ...m, typing: false } : m) } })
-                  saveChatsToStorage(user, u); return u
-                })} />
+                onDone={() => {
+                  setChats(prev => {
+                    const updated = prev.map(c => {
+                      if (c.id !== activeChatId) return c
+                      const updatedMsgs = c.messages.map((m, idx) => idx === i ? { ...m, typing: false } : m)
+                      const updatedChat = { ...c, messages: updatedMsgs }
+                      dbSaveChat(user, updatedChat)
+                      return updatedChat
+                    })
+                    return updated
+                  })
+                }} />
             )
             return <AssistantMessage key={i} msg={msg} settings={settings} ui={ui} onSendMessage={sendMessage} />
           })}
