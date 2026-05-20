@@ -2,6 +2,8 @@ import { useState } from 'react'
 import logo from './qawasim_chatbot_logo.svg'
 import './Login.css'
 
+const ALLOWED_USERS = ['altaher', 'soso']
+
 export default function Login({ onEnter }) {
   const [step, setStep] = useState('splash')
   const [name, setName] = useState('')
@@ -16,6 +18,10 @@ export default function Login({ onEnter }) {
   function handleName(e) {
     e.preventDefault()
     if (!name.trim()) return
+    if (!ALLOWED_USERS.includes(name.trim().toLowerCase())) {
+      setError('عذراً، هذا الاسم غير مسموح بالدخول')
+      return
+    }
     if (name.trim().toLowerCase() === 'soso') setStep('soso')
     else setStep('password')
   }
@@ -64,7 +70,10 @@ export default function Login({ onEnter }) {
           <p className="login-card-desc">ما اسمك؟ حتى نستطيع مخاطبتك</p>
           <form onSubmit={handleName} className="login-form">
             <input className="login-input" type="text" placeholder="اكتب اسمك هنا..."
-              value={name} onChange={e => setName(e.target.value)} dir="auto" autoFocus />
+              value={name}
+              onChange={e => { setName(e.target.value); setError('') }}
+              dir="auto" autoFocus />
+            {error && <p className="login-error">{error}</p>}
             <button className="login-btn" type="submit" disabled={!name.trim()}>
               التالي ◆
             </button>
@@ -103,7 +112,7 @@ export default function Login({ onEnter }) {
               {loading ? '...' : 'دخول ◆'}
             </button>
           </form>
-          <button className="back-btn" onClick={() => setStep('name')}>← رجوع</button>
+          <button className="back-btn" onClick={() => { setStep('name'); setError('') }}>← رجوع</button>
         </div>
       )}
     </div>
