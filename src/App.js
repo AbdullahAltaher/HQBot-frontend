@@ -12,8 +12,8 @@ import './App.css'
 
 // Supabase client — uses public anon key (read/write to conversations table only)
 const supabase = createClient(
-  process.env.REACT_APP_SUPABASE_URL,
-  process.env.REACT_APP_SUPABASE_ANON_KEY
+  'https://ujbwkfxrmhwrwhvfvhxw.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqYndrZnhybWh3cndodmZ2aHh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg4NjU4NTgsImV4cCI6MjA5NDQ0MTg1OH0.eV83rqFZ1XPQeUrrP6_7Wd0stqRqZosnoNGEKkQzoqg'
 )
 
 const DEFAULT_SETTINGS = { theme: 'dark', fontSize: 'medium', language: 'ar', tts: false }
