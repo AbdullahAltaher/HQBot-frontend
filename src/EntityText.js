@@ -31,7 +31,9 @@ function buildEntityMap(entities) {
 }
 
 function buildRegex(entityMap) {
-  const names = Object.keys(entityMap).sort((a, b) => b.length - a.length) // longest first
+  const names = Object.keys(entityMap)
+    .filter(n => n.length >= 6)
+    .sort((a, b) => b.length - a.length)
   if (names.length === 0) return null
   const escaped = names.map(n => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
   return new RegExp(`(${escaped.join('|')})`, 'g')
@@ -43,14 +45,18 @@ function segmentText(text, regex, entityMap) {
   const segments = []
   let last = 0
   let match
+  let entityCount = 0
+  const MAX_ENTITIES = 5
   regex.lastIndex = 0
   while ((match = regex.exec(text)) !== null) {
+    if (entityCount >= MAX_ENTITIES) break
     if (match.index > last) {
       segments.push({ type: 'text', content: text.slice(last, match.index) })
     }
     const entity = entityMap[match[0]]
     segments.push({ type: 'entity', content: match[0], entity })
     last = match.index + match[0].length
+    entityCount++
   }
   if (last < text.length) {
     segments.push({ type: 'text', content: text.slice(last) })
