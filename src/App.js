@@ -45,7 +45,7 @@ const UI = {
 }
 
 const SUGGESTIONS = {
-  ar: ['كيف كانت الاوضاع في الشارقة اثناء الحرب العالمية الثانية؟', 'ماهو سبب انفصال رأس الخيمة عن الشارقة؟', 'ما تاريخ نجد وآل سعود؟', 'من هو سلطان بن صقر؟'],
+  ar: ['ما تاريخ نجد وآل سعود؟', 'من هو سلطان بن صقر؟', 'كيف كانت الاوضاع في الشارقة اثناء الحرب العالمية الثانية؟', 'ماهو سبب انفصال رأس الخيمة عن الشارقة؟'],
   en: ['What was the situation like in Sharjah during World War II?', 'Why did Ras Al Khaimah separate from Sharjah?', 'History of Najd and Al Saud?', 'Who is Sultan bin Saqr?']
 }
 
